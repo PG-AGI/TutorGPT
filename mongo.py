@@ -3,7 +3,6 @@ from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 import gridfs
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import UnstructuredPDFLoader
 from langchain_community.embeddings import VoyageEmbeddings
 from langchain_community.vectorstores import FAISS
 from PyPDF2 import PdfReader
@@ -126,7 +125,7 @@ def upload(data, fileName):
 
 def load_vdb(schoolName, cls, sub):
     try:
-        return FAISS.load_local(f".Vector_DBs/{schoolName}_class_{cls}_{sub}", embeddings=embed)
+        return FAISS.load_local(f"./vectorDBs/{schoolName}_class_{cls}_{sub}", embeddings=embed)
     except Exception as e:
         print(e)
         return None
@@ -134,30 +133,23 @@ def load_vdb(schoolName, cls, sub):
 
 def updateVDB(files, schoolName, cls, sub):
     vdb = load_vdb(schoolName, cls, sub)
-    # chunks = None
     print(not files, vdb)
     text_splitter = RecursiveCharacterTextSplitter()
     if not files:
         print("No PDF files found in the folder.")
     else:
-        # for pdf_file in files:
         text = ""
         pdf_reader = PdfReader(files)
         print("pages = " + str(len(pdf_reader.pages)))
         pages = 0
-
         for page in pdf_reader.pages:
             pages += 1
             text += page.extract_text()
-        # data = loader.load()
         chunks = text_splitter.split_text(text)
         print("data loaded")
-        # texts.extend(text)
-        # print(chunks)
         if vdb == None:
-            # print(chunks)
             vdb = FAISS.from_texts(chunks, embedding=embed)
-            vdb.save_local(f"./{schoolName}_class_{cls}_{sub}")
+            vdb.save_local(f"./vectorDBs/{schoolName}_class_{cls}_{sub}")
             print("vector db created and documents added")
             return True
         else:
